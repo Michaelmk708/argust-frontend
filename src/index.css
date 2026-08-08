@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-base-50 text-ink-light dark:bg-base-950 dark:text-ink-dark transition-colors duration-300;
+  }
+
+  ::selection {
+    @apply bg-brand-violet/30;
+  }
+
+  *:focus-visible {
+    outline: 2px solid theme('colors.brand.violet');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply relative border border-black/5 dark:border-white/10
+      bg-white/70 dark:bg-white/[0.04]
+      backdrop-blur-xl shadow-glass;
+  }
+
+  .glass-nav {
+    @apply border-b border-black/5 dark:border-white/10
+      bg-white/60 dark:bg-base-950/60 backdrop-blur-xl;
+  }
+
+  .grid-backdrop {
+    @apply bg-grid-light dark:bg-grid-dark bg-grid;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-violet via-fuchsia-400 to-brand-emerald;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium
+      bg-gradient-to-r from-brand-violet to-brand-violetDeep text-white
+      shadow-glow hover:shadow-[0_0_70px_-10px_rgba(124,106,237,0.7)]
+      transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed
+      active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium
+      border border-black/10 dark:border-white/15
+      text-ink-light dark:text-ink-dark
+      hover:bg-black/[0.03] dark:hover:bg-white/[0.06]
+      transition-all duration-300 active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-black/10 dark:border-white/15
+      bg-white/80 dark:bg-white/[0.05]
+      px-4 py-3 text-sm placeholder:text-ink-light/40 dark:placeholder:text-ink-dark/40
+      focus:border-brand-violet/60 focus:ring-2 focus:ring-brand-violet/20
+      outline-none transition-all duration-200;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.brand.violet' / 40%);
+  border-radius: 999px;
+}
