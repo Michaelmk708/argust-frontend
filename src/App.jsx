@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
-
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import ProtectedAdminRoute from './components/auth/ProtectedAdminRoute'
 // Layouts
 import MainLayout from './components/layout/MainLayout.jsx'
 import DashboardLayout from './components/layout/DashboardLayout.jsx'
@@ -44,7 +46,7 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/status" element={<Status />} />
             <Route path="/login" element={<Login />} />
-            
+            <Route path="/admin/login" element={<AdminLogin />} />
             {/* NEW: Docs are now completely public! */}
             <Route path="/docs" element={<Docs />} />
 
@@ -57,6 +59,9 @@ export default function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/developer/dashboard" element={<DeveloperDashboard />} />
             <Route path="/admin" element={<AdminPortal />} />
+            <Route element={<ProtectedAdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
