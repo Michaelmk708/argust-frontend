@@ -7,13 +7,13 @@ import ProtectedAdminRoute from './components/auth/ProtectedAdminRoute'
 // Layouts
 import MainLayout from './components/layout/MainLayout.jsx'
 import DashboardLayout from './components/layout/DashboardLayout.jsx'
-
+import Contact from './pages/Public/Contact.jsx'
 // Public Pages
 import Landing from './pages/Public/Landing.jsx'
 import Status from './pages/Public/Status.jsx'
 import RequestAudit from './pages/Public/RequestAudit.jsx'
 import Register from './pages/Public/Register.jsx'
-
+import Pricing from './pages/Public/Pricing.jsx'
 // Auth Pages
 import Login from './pages/Auth/Login.jsx'
 
@@ -55,12 +55,14 @@ export default function App() {
             <Route path="/request-audit" element={<RequireAuth><RequestAudit /></RequireAuth>} />
           </Route>
 
+          <Route path="/contact" element={<Contact />} />
           {/* Protected Developer Dashboard Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/developer/dashboard" element={<DeveloperDashboard />} />
             <Route path="/admin" element={<AdminPortal />} />
             <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route element={<Pricing />} path="/pricing" />
             </Route>
           </Route>
         </Routes>

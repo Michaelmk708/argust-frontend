@@ -1,17 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Moon, Menu, X, Code2, LayoutDashboard } from 'lucide-react'
+import { Sun, Moon, Menu, X, Code2, LayoutDashboard, MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import logoImg from '../../assets/brand/logo1.jpeg'
-import Seal from '../ui/Seal.jsx'
 
 const publicLinks = [
   { to: '/', label: 'Home' },
   { to: '/status', label: 'Verify a Business' },
   { to: '/register', label: 'Register Business' },
   { to: '/request-audit', label: 'Request an Audit' },
+  { to: '/contact', label: 'Contact Us' },
+  { to: '/pricing', label: 'Pricing' }
 ]
 
 export default function Navbar() {
@@ -30,7 +31,6 @@ export default function Navbar() {
             className="h-9 w-9 rounded-xl object-cover border border-black/10 dark:border-white/15"
           />
           <div className="flex items-center gap-2">
-            <Seal size={22} state="verified" />
             <span className="font-display text-lg font-semibold tracking-tight">
               Argust <span className="gradient-text">Trust</span>
             </span>
@@ -118,35 +118,36 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Slide-over Drawer Panel */}
+      {/* Mobile Slide-over Drawer Panel */}
       <AnimatePresence>
         {open && (
           <>
             {/* Backdrop Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
             />
             
-            {/* DARKER, RICHER GLASSMORPHISM ON THE SIDE PANEL */}
+            {/* DEEP DARK GLASSMORPHISM ON THE SIDE PANEL */}
             <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-72 bg-[#0B1220]/80 backdrop-blur-2xl saturate-150 border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl lg:hidden text-ink-dark transition-colors duration-300"
+              className="fixed inset-y-0 right-0 z-50 w-72 bg-slate-950/95 backdrop-blur-3xl saturate-200 border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl shadow-black/50 lg:hidden text-slate-100 transition-colors duration-300"
             >
               <div>
-                <div className="flex items-center justify-between pb-6 border-b border-black/10 dark:border-white/10">
+                <div className="flex items-center justify-between pb-6 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <img src={logoImg} alt="Argust Logo" className="h-8 w-8 rounded-lg object-cover" />
-                    <span className="font-display font-semibold text-lg">Argust</span>
+                    <span className="font-display font-semibold text-lg text-white">Argust</span>
                   </div>
                   <button
                     onClick={() => setOpen(false)}
-                    className="p-1.5 rounded-lg border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -162,8 +163,8 @@ export default function Navbar() {
                       className={({ isActive }) =>
                         `block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                           isActive
-                            ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/20 font-semibold'
-                            : 'text-ink-light/70 dark:text-ink-dark/70 hover:bg-black/5 dark:hover:bg-white/5 hover:text-ink-light dark:hover:text-ink-dark'
+                            ? 'bg-brand-violet/20 text-brand-violet border border-brand-violet/30 font-semibold'
+                            : 'text-slate-300 hover:bg-white/5 hover:text-white'
                         }`
                       }
                     >
@@ -174,7 +175,7 @@ export default function Navbar() {
                   <NavLink
                     to="/docs"
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-ink-light/70 dark:text-ink-dark/70 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
                   >
                     <Code2 className="h-4 w-4" />
                     Developer Docs
@@ -182,14 +183,30 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-black/10 dark:border-white/10">
+              <div className="pt-6 border-t border-white/10 space-y-3">
                 <NavLink
                   to={user ? "/developer/dashboard" : "/login"}
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-black/15 dark:border-white/20 bg-black/5 dark:bg-white/5 py-3 text-center text-sm font-semibold hover:bg-black/10 dark:hover:bg-white/10 transition-all"
+                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Developer Dashboard
+                </NavLink>
+                <NavLink
+                  to="/contact"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Contact Us
+                </NavLink>
+                <NavLink
+                  to="/pricing"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+                >
+                  <Tag className="h-4 w-4" />
+                  Pricing
                 </NavLink>
               </div>
             </motion.aside>

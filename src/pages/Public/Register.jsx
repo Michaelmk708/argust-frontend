@@ -19,12 +19,7 @@ import ZkTlsHurdle from '../../components/zktls/ZkTlsHurdle.jsx'
 import { useVerifyBusiness } from '../../sdk/useVerifyBusiness.js'
 import { sha256Hex } from '../../sdk/crypto.js'
 
-// The government registry domain the zkTLS session proves data
-// against. It is hashed (never sent in the clear) and included in the
-// on-chain record as `source_domain_hash`, so a verifier can confirm
-// which authority the proof was sourced from without Argust exposing
-// the registry's raw response.
-const REGISTRY_SOURCE_DOMAIN = 'gavaconnect.kra.go.ke'
+const REGISTRY_SOURCE_DOMAIN = 'itax.kra.go.ke'
 
 const AUDIT_TYPES = [
   { value: 'WEB2_INFRA', tier: 1, label: 'Business Operations', desc: 'Physical & cloud systems' },
@@ -49,8 +44,6 @@ export default function Register() {
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
-    // Any change to the underlying business details invalidates a
-    // previously generated proof — the hurdle must be cleared again.
     if (proof) setProof(null)
   }
 
@@ -67,13 +60,13 @@ export default function Register() {
 
   function handleProofComplete(result) {
     setProof(result)
-    toast.success('zkTLS proof generated — ready to submit.')
+    toast.success('Registry check complete — ready to submit.')
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!proof) {
-      toast.error('Complete zkTLS verification before submitting.')
+      toast.error('Complete the registry check before submitting.')
       return
     }
 
@@ -93,14 +86,14 @@ export default function Register() {
         business_name_hash,
         is_active: proof.is_active,
         is_tax_compliant: proof.is_tax_compliant,
-        audit_tier: selectedAudit.tier,       // The number (1, 2, 3)
-        audit_type: form.audit_type,          // The string ('WEB2_INFRA', etc.)
+        audit_tier: selectedAudit.tier,
+        audit_type: form.audit_type,
         source_domain_hash,
         zk_proof_bytes: proof.zk_proof_bytes,
       }
 
       await submitBusinessVerification(payload)
-      toast.success(`${form.business_name || 'Business'} submitted for verification.`)
+      toast.success(`Registration submitted. Pending final audit.`)
 
       const brsNumber = form.brs_number.trim()
       setForm(initialForm)
@@ -126,7 +119,7 @@ export default function Register() {
             Register a <span className="gradient-text">Business</span>
           </h1>
           <p className="mt-2 text-ink-light/60 dark:text-ink-dark/60 text-sm md:text-base">
-            Submit official registration details to receive your digital verification seal.
+            Submit official details to receive your digital verification seal.
           </p>
         </motion.div>
 
@@ -164,7 +157,7 @@ export default function Register() {
             placeholder="e.g. P051234567X"
           />
           <p className="-mt-4 text-xs text-ink-light/40 dark:text-ink-dark/40">
-            Your KRA PIN is used only to run the zkTLS check below and is never sent to
+            Your KRA PIN is used only to run the registry check below and is never sent to
             Argust or stored on-chain — only the resulting proof is submitted.
           </p>
 
@@ -192,8 +185,6 @@ export default function Register() {
             </div>
           </div>
 
-          {/* The zkTLS hurdle: this gate must be cleared before the
-              form can submit to the backend. */}
           <div
             className={`rounded-2xl border p-4 transition-colors duration-300 ${
               proof
@@ -211,12 +202,12 @@ export default function Register() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">
-                  {proof ? 'zkTLS proof verified' : 'zkTLS verification required'}
+                  {proof ? 'Registry check complete' : 'Registry verification required'}
                 </p>
                 <p className="text-xs text-ink-light/50 dark:text-ink-dark/50">
                   {proof
-                    ? 'Your claim is proven and ready to submit — no raw credentials were shared.'
-                    : 'Prove your registration and tax compliance without exposing raw credentials.'}
+                    ? 'Your claim is ready to submit for final administrative audit.'
+                    : 'Query official registries to prove your registration and tax compliance.'}
                 </p>
               </div>
               {!proof && (
@@ -227,7 +218,7 @@ export default function Register() {
                   className="btn-ghost whitespace-nowrap border-brand-violet/40 text-brand-violet disabled:opacity-40"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Run zkTLS check
+                  Run Check
                 </button>
               )}
             </div>
@@ -245,7 +236,7 @@ export default function Register() {
               </>
             ) : (
               <>
-                Submit for Verification
+                Submit for Final Audit
                 <ArrowRight className="h-4 w-4" />
               </>
             )}

@@ -12,14 +12,18 @@ import {
   ShieldCheck,
   Building2,
   Database,
+  QrCode
 } from 'lucide-react'
 
 import GlowField from '../../components/common/GlowField.jsx'
 import Seal from '../../components/ui/Seal.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
-import { useBusinessStatus } from '../../sdk/useBusinessStatus.js'
-import { useProvenanceStatus } from '../../sdk/useProvenanceStatus.js'
+import TrustBadge from '../../components/common/TrustBadge.jsx'
 import { truncateHash } from '../../sdk/http.js'
+import { ArgustClient } from '@argust/sdk' // Injecting the new SDK
+
+// Initialize the SDK client (use a live key in production via env vars)
+const argust = new ArgustClient({ apiKey: 'arg_test_1234567890abcdef' })
 
 const TABS = [
   { id: 'business', label: 'Business', icon: Building2, placeholder: 'e.g. PVT-12345' },
@@ -33,29 +37,56 @@ export default function Status() {
 
   const [tab, setTab] = useState(initialHash && !initialBrs ? 'provenance' : 'business')
   const [query, setQuery] = useState(initialBrs || initialHash)
+  
+  // Unified state to replace the deprecated custom hooks
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
 
-  const business = useBusinessStatus()
-  const provenance = useProvenanceStatus()
-
-  const active = tab === 'business' ? business : provenance
   const activeTab = TABS.find((t) => t.id === tab)
 
   useEffect(() => {
     if (initialBrs) {
       setTab('business')
-      business.lookup(initialBrs)
+      lookup(initialBrs, 'business')
     } else if (initialHash) {
       setTab('provenance')
-      provenance.lookup(initialHash)
+      lookup(initialHash, 'provenance')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  async function lookup(searchQuery, searchType) {
+    if (!searchQuery) return
+    setLoading(true)
+    setError(null)
+    setResult(null)
+
+    try {
+      let data;
+      if (searchType === 'business') {
+        data = await argust.getBusinessStatus(searchQuery)
+      } else {
+        data = await argust.getProvenanceStatus(searchQuery)
+      }
+      setResult(data)
+    } catch (err) {
+      // Catch 404s cleanly, or flag true 500s (database schema mismatches)
+      setError(
+        err.message.includes('404') || err.message.includes('not found')
+          ? 'No Record Found'
+          : `Server Error: ${err.message}`
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
   function switchTab(nextTab) {
     setTab(nextTab)
     setQuery('')
-    business.reset()
-    provenance.reset()
+    setResult(null)
+    setError(null)
     setSearchParams({})
   }
 
@@ -66,10 +97,10 @@ export default function Status() {
 
     if (tab === 'business') {
       setSearchParams({ brs_number: trimmed })
-      business.lookup(trimmed)
+      lookup(trimmed, 'business')
     } else {
       setSearchParams({ data_hash: trimmed })
-      provenance.lookup(trimmed)
+      lookup(trimmed, 'provenance')
     }
   }
 
@@ -78,7 +109,10 @@ export default function Status() {
     toast.success('Certificate proof copied')
   }
 
-  const result = active.data
+  // Derive the explorer URL based on the transaction hash
+  const explorerUrl = result?.tx_hash 
+    ? `https://explorer.solana.com/tx/${result.tx_hash}?cluster=devnet`
+    : '#'
 
   return (
     <div className="relative min-h-[80vh] px-6 py-12 md:py-20">
@@ -126,12 +160,12 @@ export default function Status() {
             />
           </div>
           <button type="submit" className="btn-primary whitespace-nowrap">
-            {active.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
           </button>
         </form>
 
         <AnimatePresence mode="wait">
-          {active.loading && (
+          {loading && (
             <motion.div
               key="loading"
               initial={{ opacity: 0 }}
@@ -146,7 +180,7 @@ export default function Status() {
             </motion.div>
           )}
 
-          {!active.loading && active.error && (
+          {!loading && error && (
             <motion.div
               key="error"
               initial={{ opacity: 0, y: 10 }}
@@ -156,11 +190,11 @@ export default function Status() {
             >
               <AlertTriangle className="h-8 w-8 text-brand-rose" />
               <p className="font-medium">No Record Found</p>
-              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">{active.error}</p>
+              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">{error}</p>
             </motion.div>
           )}
 
-          {!active.loading && !active.error && result && (
+          {!loading && !error && result && (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 10 }}
@@ -176,13 +210,18 @@ export default function Status() {
                   <h2 className="mt-1 font-display text-xl font-semibold">
                     {tab === 'business'
                       ? result.business_name || 'Registered Business'
-                      : result.category_tag || 'Data Record'}
+                      : `Category Tag: ${result.category_tag || 'Data Record'}`}
                   </h2>
+                  {tab === 'provenance' && result.numeric_claim && (
+                    <p className="text-sm text-ink-light/60 dark:text-ink-dark/60 mt-1">
+                      Logged Value: <span className="font-mono">{result.numeric_claim}</span>
+                    </p>
+                  )}
                 </div>
                 <Seal
                   size={44}
                   state={
-                    result.status === 'VERIFIED'
+                    result.status === 'VERIFIED' || result.tx_hash
                       ? 'verified'
                       : result.status === 'PENDING_AUDIT'
                         ? 'pending'
@@ -192,7 +231,7 @@ export default function Status() {
               </div>
 
               <div className="mt-5">
-                <StatusBadge status={result.status} size="lg" />
+                <StatusBadge status={result.status || 'VERIFIED'} size="lg" />
               </div>
 
               {tab === 'business' && (result.pda_address || result.audit_tier) && (
@@ -212,33 +251,58 @@ export default function Status() {
                 </dl>
               )}
 
-              {result.status === 'VERIFIED' && result.tx_hash && (
-                <div className="mt-6 rounded-2xl border border-brand-emerald/20 bg-brand-emerald/5 p-4">
-                  <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wide text-brand-emerald">
-                    <ShieldCheck className="h-4 w-4" />
-                    Digital Certificate Proof
+              {/* Digital Certificate & Trust Badge Section */}
+              {(result.status === 'VERIFIED' || result.tx_hash) && result.tx_hash && (
+                <div className="mt-8 space-y-4">
+                  {/* Solana Record */}
+                  <div className="rounded-2xl border border-brand-emerald/20 bg-brand-emerald/5 p-4">
+                    <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wide text-brand-emerald">
+                      <ShieldCheck className="h-4 w-4" />
+                      Digital Certificate Proof
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 truncate rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 font-mono text-xs">
+                        {result.tx_hash}
+                      </code>
+                      <button
+                        onClick={() => copyHash(result.tx_hash)}
+                        aria-label="Copy Certificate Proof"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <a
+                        href={explorerUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="View Public Registry Proof"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 truncate rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 font-mono text-xs">
-                      {result.tx_hash}
-                    </code>
-                    <button
-                      onClick={() => copyHash(result.tx_hash)}
-                      aria-label="Copy Certificate Proof"
-                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                    <a
-                      href={active.explorerUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="View Public Registry Proof"
-                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
+
+                  {/* QR Code Embed for Businesses */}
+                  {tab === 'business' && (
+                    <div className="rounded-2xl border border-brand-violet/20 bg-brand-violet/5 p-6 flex flex-col sm:flex-row items-center gap-6 justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5 text-sm font-semibold text-brand-violet">
+                          <QrCode className="h-4 w-4" />
+                          Official Trust Badge
+                        </div>
+                        <p className="text-xs text-ink-light/70 dark:text-ink-dark/70 max-w-[250px]">
+                          Display this on your storefront or website. Scans route directly to this cryptographic attestation.
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <TrustBadge 
+                          brsNumber={result.brs_number} 
+                          businessName={result.business_name || 'Verified Business'} 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
