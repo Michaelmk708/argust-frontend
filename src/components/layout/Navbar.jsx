@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Moon, Menu, X, Code2, LayoutDashboard, MessageSquare } from 'lucide-react'
+import { Sun, Moon, Menu, X, Code2, LayoutDashboard, MessageSquare, Tag } from 'lucide-react'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTheme } from '../../context/ThemeContext.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import logoImg from '../../assets/brand/logo1.jpeg'
@@ -117,102 +118,111 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Slide-over Drawer Panel */}
-      {/* Mobile Slide-over Drawer Panel */}
-      <AnimatePresence>
-        {open && (
-          <>
-            {/* Backdrop Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
-            />
-            
-            {/* DEEP DARK GLASSMORPHISM ON THE SIDE PANEL */}
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-72 bg-slate-950/95 backdrop-blur-3xl saturate-200 border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl shadow-black/50 lg:hidden text-slate-100 transition-colors duration-300"
-            >
-              <div>
-                <div className="flex items-center justify-between pb-6 border-b border-white/10">
-                  <div className="flex items-center gap-2">
-                    <img src={logoImg} alt="Argust Logo" className="h-8 w-8 rounded-lg object-cover" />
-                    <span className="font-display font-semibold text-lg text-white">Argust</span>
+      {/* Mobile Slide-over Drawer — rendered in a PORTAL directly on document.body.
+          This is REQUIRED: the header above has backdrop-blur-xl, which is a CSS
+          filter. Any element with a filter becomes the containing block for its
+          position:fixed descendants. Without the portal, the drawer's inset-y-0
+          sizes itself against the header's small height (not the viewport),
+          which is why it was rendering as a thin strip with everything else
+          overflowing unstyled below it. */}
+      {createPortal(
+        <AnimatePresence>
+          {open && (
+            <>
+              {/* Backdrop Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.6 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setOpen(false)}
+                className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm lg:hidden"
+              />
+
+              {/* Solid dark glassmorphism side panel */}
+              <motion.aside
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 right-0 z-[101] w-72 h-screen backdrop-blur-3xl saturate-200 border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl shadow-black/50 lg:hidden text-slate-100"
+                style={{ backgroundColor: 'rgba(2, 6, 23, 0.98)' }}
+              >
+                <div>
+                  <div className="flex items-center justify-between pb-6 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <img src={logoImg} alt="Argust Logo" className="h-8 w-8 rounded-lg object-cover" />
+                      <span className="font-display font-semibold text-lg text-white">Argust</span>
+                    </div>
+                    <button
+                      onClick={() => setOpen(false)}
+                      className="p-1.5 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setOpen(false)}
-                    className="p-1.5 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+
+                  <div className="mt-6 space-y-1.5">
+                    {publicLinks.map((link) => (
+                      <NavLink
+                        key={link.to}
+                        to={link.to}
+                        end={link.to === '/'}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-brand-violet/20 text-brand-violet border border-brand-violet/30 font-semibold'
+                              : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                          }`
+                        }
+                      >
+                        {link.label}
+                      </NavLink>
+                    ))}
+
+                    <NavLink
+                      to="/docs"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                    >
+                      <Code2 className="h-4 w-4" />
+                      Developer Docs
+                    </NavLink>
+                  </div>
                 </div>
 
-                <div className="mt-6 space-y-1.5">
-                  {publicLinks.map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      end={link.to === '/'}
-                      onClick={() => setOpen(false)}
-                      className={({ isActive }) =>
-                        `block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-brand-violet/20 text-brand-violet border border-brand-violet/30 font-semibold'
-                            : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                        }`
-                      }
-                    >
-                      {link.label}
-                    </NavLink>
-                  ))}
-
+                <div className="pt-6 border-t border-white/10 space-y-3">
                   <NavLink
-                    to="/docs"
+                    to={user ? "/developer/dashboard" : "/login"}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
                   >
-                    <Code2 className="h-4 w-4" />
-                    Developer Docs
+                    <LayoutDashboard className="h-4 w-4" />
+                    Developer Dashboard
+                  </NavLink>
+                  <NavLink
+                    to="/contact"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Contact Us
+                  </NavLink>
+                  <NavLink
+                    to="/pricing"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+                  >
+                    <Tag className="h-4 w-4" />
+                    Pricing
                   </NavLink>
                 </div>
-              </div>
-
-              <div className="pt-6 border-t border-white/10 space-y-3">
-                <NavLink
-                  to={user ? "/developer/dashboard" : "/login"}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Developer Dashboard
-                </NavLink>
-                <NavLink
-                  to="/contact"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Contact Us
-                </NavLink>
-                <NavLink
-                  to="/pricing"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/20 bg-white/5 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
-                >
-                  <Tag className="h-4 w-4" />
-                  Pricing
-                </NavLink>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </header>
   )
 }
