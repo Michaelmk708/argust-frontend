@@ -7,4 +7,10 @@ export default defineConfig({
     port: 5173,
     open: true,
   },
+  // Add this new resolve block here
+  resolve: {
+    alias: {
+      '@argust/sdk': '/src/sdk'
+    }
+  }
 })
