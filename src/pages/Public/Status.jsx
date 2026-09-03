@@ -20,10 +20,7 @@ import Seal from '../../components/ui/Seal.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import TrustBadge from '../../components/common/TrustBadge.jsx'
 import { truncateHash } from '../../sdk/http.js'
-import { ArgustClient } from '@argust/sdk' // Injecting the new SDK
-
-// Initialize the SDK client (use a live key in production via env vars)
-const argust = new ArgustClient({ apiKey: 'arg_test_1234567890abcdef' })
+import { useBusinessStatus, useProvenanceStatus } from '@argust/sdk'
 
 const TABS = [
   { id: 'business', label: 'Business', icon: Building2, placeholder: 'e.g. PVT-12345' },
@@ -38,55 +35,49 @@ export default function Status() {
   const [tab, setTab] = useState(initialHash && !initialBrs ? 'provenance' : 'business')
   const [query, setQuery] = useState(initialBrs || initialHash)
   
-  // Unified state to replace the deprecated custom hooks
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [result, setResult] = useState(null)
-
   const activeTab = TABS.find((t) => t.id === tab)
+
+  // Use the SDK hooks
+  const { 
+    data: businessData, 
+    loading: businessLoading, 
+    error: businessError, 
+    fetchStatus: fetchBusiness 
+  } = useBusinessStatus(null) // Pass null initially so it doesn't auto-fetch
+
+  const { 
+    data: provenanceData, 
+    loading: provenanceLoading, 
+    error: provenanceError, 
+    fetchStatus: fetchProvenance 
+  } = useProvenanceStatus(null)
+
+  // Derived state based on the active tab
+  const loading = tab === 'business' ? businessLoading : provenanceLoading
+  const rawError = tab === 'business' ? businessError : provenanceError
+  const result = tab === 'business' ? businessData : provenanceData
+
+  // Clean up the error message for UI display
+  const error = rawError 
+    ? (rawError.includes('404') || rawError.includes('not found') 
+        ? 'No Record Found' 
+        : `Server Error: ${rawError}`)
+    : null
 
   useEffect(() => {
     if (initialBrs) {
       setTab('business')
-      lookup(initialBrs, 'business')
+      fetchBusiness(initialBrs)
     } else if (initialHash) {
       setTab('provenance')
-      lookup(initialHash, 'provenance')
+      fetchProvenance(initialHash)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function lookup(searchQuery, searchType) {
-    if (!searchQuery) return
-    setLoading(true)
-    setError(null)
-    setResult(null)
-
-    try {
-      let data;
-      if (searchType === 'business') {
-        data = await argust.getBusinessStatus(searchQuery)
-      } else {
-        data = await argust.getProvenanceStatus(searchQuery)
-      }
-      setResult(data)
-    } catch (err) {
-      // Catch 404s cleanly, or flag true 500s (database schema mismatches)
-      setError(
-        err.message.includes('404') || err.message.includes('not found')
-          ? 'No Record Found'
-          : `Server Error: ${err.message}`
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
   function switchTab(nextTab) {
     setTab(nextTab)
     setQuery('')
-    setResult(null)
-    setError(null)
     setSearchParams({})
   }
 
@@ -97,10 +88,10 @@ export default function Status() {
 
     if (tab === 'business') {
       setSearchParams({ brs_number: trimmed })
-      lookup(trimmed, 'business')
+      fetchBusiness(trimmed)
     } else {
       setSearchParams({ data_hash: trimmed })
-      lookup(trimmed, 'provenance')
+      fetchProvenance(trimmed)
     }
   }
 
@@ -109,7 +100,6 @@ export default function Status() {
     toast.success('Certificate proof copied')
   }
 
-  // Derive the explorer URL based on the transaction hash
   const explorerUrl = result?.tx_hash 
     ? `https://explorer.solana.com/tx/${result.tx_hash}?cluster=devnet`
     : '#'
@@ -251,10 +241,8 @@ export default function Status() {
                 </dl>
               )}
 
-              {/* Digital Certificate & Trust Badge Section */}
               {(result.status === 'VERIFIED' || result.tx_hash) && result.tx_hash && (
                 <div className="mt-8 space-y-4">
-                  {/* Solana Record */}
                   <div className="rounded-2xl border border-brand-emerald/20 bg-brand-emerald/5 p-4">
                     <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wide text-brand-emerald">
                       <ShieldCheck className="h-4 w-4" />
@@ -283,7 +271,6 @@ export default function Status() {
                     </div>
                   </div>
 
-                  {/* QR Code Embed for Businesses */}
                   {tab === 'business' && (
                     <div className="rounded-2xl border border-brand-violet/20 bg-brand-violet/5 p-6 flex flex-col sm:flex-row items-center gap-6 justify-between">
                       <div>
