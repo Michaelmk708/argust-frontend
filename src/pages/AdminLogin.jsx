@@ -15,7 +15,8 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      const response = await axios.post('http://localhost:8080/api/admin/login', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const response = await axios.post(`${API_URL}/admin/login`, {
         secret_key: password,
       })
 

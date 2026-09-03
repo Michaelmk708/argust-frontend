@@ -89,8 +89,8 @@ export default function Pricing() {
     setLoading(planType)
 
     try {
-      const response = await fetch('http://localhost:8080/api/billing/checkout', {
-        method: 'POST',
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const response = await fetch(`${API_URL}/billing/checkout`, {
         headers: {
           'Content-Type': 'application/json',
         },
