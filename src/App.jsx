@@ -32,6 +32,7 @@ function RequireAuth({ children }) {
   }
   return children
 }
+// ... (imports remain the same) ...
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
         <Toaster position="bottom-right" toastOptions={{ className: 'glass-panel' }} />
         
         <Routes>
+          {/* MainLayout contains the Navbar - ALL public pages must go inside here */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Landing />} />
             <Route path="/status" element={<Status />} />
@@ -47,13 +49,15 @@ export default function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/pricing" element={<Pricing />} />
+            
+            {/* FIXED: Moved Contact inside the MainLayout so it gets the Navbar! */}
+            <Route path="/contact" element={<Contact />} />
 
             <Route path="/register" element={<RequireAuth><Register /></RequireAuth>} />
             <Route path="/request-audit" element={<RequireAuth><RequestAudit /></RequireAuth>} />
           </Route>
-
-          <Route path="/contact" element={<Contact />} />
           
+          {/* Protected Dashboard Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
             <Route path="/admin" element={<AdminPortal />} />
