@@ -18,7 +18,6 @@ const TABS = [
   { id: 'provenance', label: 'Data Provenance', icon: Database, placeholder: 'e.g. 0x9f1c2a...' },
 ]
 
-// Safe local truncate to prevent missing import crashes
 const safeTruncate = (str, len = 8) => {
   if (!str) return ''
   if (str.length <= len * 2) return str
@@ -27,16 +26,29 @@ const safeTruncate = (str, len = 8) => {
 
 export default function Status() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialBrs = searchParams.get('brs_number') || ''
-  const initialHash = searchParams.get('data_hash') || ''
+  const [tab, setTab] = useState('business')
+  const [query, setQuery] = useState('')
+  const [activeSearch, setActiveSearch] = useState('')
 
-  const [tab, setTab] = useState(initialHash && !initialBrs ? 'provenance' : 'business')
-  const [query, setQuery] = useState(initialBrs || initialHash)
-  const [activeSearch, setActiveSearch] = useState(initialBrs || initialHash)
-  
+  // Sync URL parameters with local state automatically when the page loads or URL changes
+  useEffect(() => {
+    const brs = searchParams.get('brs_number')
+    const hash = searchParams.get('data_hash')
+
+    if (brs) {
+      setTab('business')
+      setQuery(brs)
+      setActiveSearch(brs)
+    } else if (hash) {
+      setTab('provenance')
+      setQuery(hash)
+      setActiveSearch(hash)
+    }
+  }, [searchParams])
+
   const activeTab = TABS.find((t) => t.id === tab)
 
-  // Reactive fetching: Passing the query automatically triggers the hook securely
+  // Reactive fetching
   const { data: businessData, loading: businessLoading, error: businessError } = useBusinessStatus(tab === 'business' ? activeSearch : null)
   const { data: provenanceData, loading: provenanceLoading, error: provenanceError } = useProvenanceStatus(tab === 'provenance' ? activeSearch : null)
 
@@ -44,11 +56,12 @@ export default function Status() {
   const rawError = tab === 'business' ? businessError : provenanceError
   const result = tab === 'business' ? businessData : provenanceData
 
-  const error = rawError 
-    ? (rawError.includes('404') || rawError.includes('not found') 
-        ? 'No Record Found' 
-        : `Server Error: ${rawError}`)
-    : null
+  // Determine if we should show the "Not Found" error state
+  // We show it if the API returned an explicit error, OR if a search completed but returned no data.
+  const isNotFound = rawError || (activeSearch && !loading && !result)
+  const displayError = rawError 
+    ? (String(rawError).includes('404') || String(rawError).toLowerCase().includes('not found') ? 'No Record Found' : `Server Error: ${rawError}`)
+    : 'No Record Found'
 
   function switchTab(nextTab) {
     setTab(nextTab)
@@ -133,15 +146,15 @@ export default function Status() {
             </motion.div>
           )}
 
-          {!loading && error && (
+          {!loading && isNotFound && (
             <motion.div key="error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="glass-panel mt-8 flex flex-col items-center gap-3 rounded-3xl p-10 text-center border-brand-rose/20">
               <AlertTriangle className="h-8 w-8 text-brand-rose" />
               <p className="font-medium">No Record Found</p>
-              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">{error}</p>
+              <p className="text-sm text-ink-light/60 dark:text-ink-dark/60">{displayError}</p>
             </motion.div>
           )}
 
-          {!loading && !error && result && (
+          {!loading && !isNotFound && result && (
             <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="glass-panel mt-8 rounded-3xl p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
