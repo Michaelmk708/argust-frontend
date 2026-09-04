@@ -28,7 +28,6 @@ function RequireAuth({ children }) {
   const location = useLocation()
   
   if (!user) {
-    // Redirect them to login, but remember where they were trying to go!
     return <Navigate to="/login" state={{ from: location }} replace />
   }
   return children
@@ -47,8 +46,10 @@ export default function App() {
             <Route path="/status" element={<Status />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            {/* NEW: Docs are now completely public! */}
             <Route path="/docs" element={<Docs />} />
+            
+            {/* FIXED: Pricing is now public! */}
+            <Route path="/pricing" element={<Pricing />} />
 
             {/* Gated Behind Account Login */}
             <Route path="/register" element={<RequireAuth><Register /></RequireAuth>} />
@@ -56,13 +57,15 @@ export default function App() {
           </Route>
 
           <Route path="/contact" element={<Contact />} />
+          
           {/* Protected Developer Dashboard Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/developer/dashboard" element={<DeveloperDashboard />} />
             <Route path="/admin" element={<AdminPortal />} />
+            
+            {/* Admin Only Routes */}
             <Route element={<ProtectedAdminRoute />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route element={<Pricing />} path="/pricing" />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Route>
           </Route>
         </Routes>

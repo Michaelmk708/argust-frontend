@@ -14,8 +14,8 @@ const FEATURES = [
   },
   {
     icon: ShieldCheck,
-    title: 'Independent security audits',
-    body: 'Evaluates business infrastructure, digital software, and operational security before issuing a trust seal.',
+    title: 'Digital footprint analysis',
+    body: 'Verifies the company\'s operational digital footprint and transaction history to establish a baseline of operational trust.',
   },
   {
     icon: CheckCircle2,
@@ -55,7 +55,7 @@ export default function Landing() {
               <span className="gradient-text">verified &amp; protected.</span>
             </h1>
             <p className="mt-5 max-w-lg text-base text-ink-light/70 dark:text-ink-dark/70 md:text-lg">
-              Argust Trust validates business registration, tax compliance, and operational security — giving your company a permanent, tamper-proof seal of authenticity.
+              Argust Trust validates business registration, tax compliance, and operational footprints — giving your company a permanent, tamper-proof seal of authenticity.
             </p>
 
             <form
@@ -106,7 +106,7 @@ export default function Landing() {
             </div>
             <h3 className="font-display text-xl font-semibold">Need an in-depth security audit for your company?</h3>
             <p className="text-sm text-ink-light/70 dark:text-ink-dark/70 max-w-xl">
-              Our engineering team inspects web infrastructure, financial backend systems, and smart contracts to ensure zero vulnerabilities before certification.
+              Our engineering team inspects web infrastructure, financial backend systems, and smart contracts to ensure zero vulnerabilities.
             </p>
           </div>
           <Link to="/request-audit" className="btn-primary whitespace-nowrap">
