@@ -96,20 +96,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-brand-emerald/20 bg-brand-emerald/5 p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-emerald"></span>
-                </span>
-                <h4 className="font-display text-sm font-semibold text-brand-emerald">
-                  Network Status: Healthy
-                </h4>
-              </div>
-              <p className="text-xs text-ink-light/70 dark:text-ink-dark/70">
-                Solana devnet anchoring is operating normally. Average confirmation time is 1.2s.
-              </p>
-            </div>
+            
           </motion.div>
 
           <motion.div
