@@ -2,21 +2,13 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-import {
-  Loader2,
-  Building2,
-  Hash,
-  FileText,
-  Layers,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-} from 'lucide-react'
+import { Loader2, Building2, Hash, FileText, Layers, ArrowRight, CheckCircle2, Lock } from 'lucide-react'
 
 import GlowField from '../../components/common/GlowField.jsx'
 import KraTccVerification from '../../components/zktls/KraTccVerification.jsx'
 import { useVerifyBusiness } from '../../sdk/useVerifyBusiness.js'
 import { sha256Hex } from '../../sdk/crypto.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const REGISTRY_SOURCE_DOMAIN = 'itax.kra.go.ke'
 
@@ -26,28 +18,24 @@ const AUDIT_TYPES = [
   { value: 'HYBRID', tier: 3, label: 'Complete Business', desc: 'Full digital & physical audit' },
 ]
 
-const initialForm = {
-  business_name: '',
-  brs_number: '',
-  kra_pin: '',
-  audit_type: 'WEB2_INFRA',
-}
+const initialForm = { business_name: '', brs_number: '', kra_pin: '', audit_type: 'WEB2_INFRA' }
 
 export default function Register() {
+  const { user } = useAuth()
   const [form, setForm] = useState(initialForm)
   const [proof, setProof] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const { submitBusinessVerification } = useVerifyBusiness()
 
+  const isBusinessTier = user?.plan_type === 'BUSINESS_PRO' || user?.plan_type === 'ENTERPRISE'
+
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
-    if (proof) setProof(null) // Reset proof if they change core details
+    if (proof) setProof(null)
   }
 
-  // The KRA Verification component will call this when successful
   function handleRegistryComplete(verificationData) {
-    // We shape this to match what your backend expects for the final submission
     setProof({
       is_active: true,
       is_tax_compliant: true,
@@ -57,6 +45,14 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    
+    // Strict Gate: Block developers from submitting business verification
+    if (!isBusinessTier) {
+      toast.error('Business Registration requires a Business Verification plan.')
+      navigate('/pricing')
+      return
+    }
+
     if (!proof) {
       toast.error('Complete the KRA registry check before submitting.')
       return
@@ -65,7 +61,6 @@ export default function Register() {
     setSubmitting(true)
     try {
       const selectedAudit = AUDIT_TYPES.find((t) => t.value === form.audit_type) || AUDIT_TYPES[0]
-
       const [business_name_hash, source_domain_hash] = await Promise.all([
         sha256Hex(form.business_name.trim().toLowerCase()),
         sha256Hex(REGISTRY_SOURCE_DOMAIN),
@@ -102,11 +97,7 @@ export default function Register() {
     <div className="relative min-h-[80vh] px-6 py-12 md:py-20">
       <GlowField />
       <div className="relative mx-auto max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 text-center"
-        >
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
           <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
             Register a <span className="gradient-text">Business</span>
           </h1>
@@ -115,62 +106,21 @@ export default function Register() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="glass-panel rounded-3xl p-8 space-y-6"
-        >
-          {/* Main Registration Form */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-panel rounded-3xl p-8 space-y-6">
           <form id="registration-form" onSubmit={handleSubmit} className="space-y-6">
-            <Field
-              label="Official Business Name"
-              icon={Building2}
-              required
-              value={form.business_name}
-              onChange={(v) => update('business_name', v)}
-              placeholder="e.g. Nairobi Tech Hub Ltd."
-            />
-
-            <Field
-              label="BRS Registration Number"
-              icon={Hash}
-              required
-              value={form.brs_number}
-              onChange={(v) => update('brs_number', v)}
-              placeholder="e.g. PVT-12345"
-            />
-
-            <Field
-              label="KRA PIN"
-              icon={FileText}
-              required
-              value={form.kra_pin}
-              onChange={(v) => update('kra_pin', v)}
-              placeholder="e.g. P051234567A"
-            />
+            <Field label="Official Business Name" icon={Building2} required value={form.business_name} onChange={(v) => update('business_name', v)} placeholder="e.g. Nairobi Tech Hub Ltd." />
+            <Field label="BRS Registration Number" icon={Hash} required value={form.brs_number} onChange={(v) => update('brs_number', v)} placeholder="e.g. PVT-12345" />
+            <Field label="KRA PIN" icon={FileText} required value={form.kra_pin} onChange={(v) => update('kra_pin', v)} placeholder="e.g. P051234567A" />
+            
             <p className="-mt-4 text-xs text-ink-light/40 dark:text-ink-dark/40">
-              Your KRA PIN is used only to run the registry check below and is never sent to
-              Argust or stored on-chain — only the resulting cryptographic proof is submitted.
+              Your KRA PIN is used only to run the registry check below and is never sent to Argust or stored on-chain.
             </p>
 
             <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium">
-                <Layers className="h-4 w-4 text-brand-violet" />
-                Verification Scope
-              </label>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium"><Layers className="h-4 w-4 text-brand-violet" /> Verification Scope</label>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 {AUDIT_TYPES.map((type) => (
-                  <button
-                    type="button"
-                    key={type.value}
-                    onClick={() => update('audit_type', type.value)}
-                    className={`rounded-2xl border p-3 text-left transition-all duration-200 ${
-                      form.audit_type === type.value
-                        ? 'border-brand-violet bg-brand-violet/10 text-brand-violet shadow-glow'
-                        : 'border-black/10 dark:border-white/15 text-ink-light/70 dark:text-ink-dark/70 hover:bg-black/[0.02] dark:hover:bg-white/[0.04]'
-                    }`}
-                  >
+                  <button type="button" key={type.value} onClick={() => update('audit_type', type.value)} className={`rounded-2xl border p-3 text-left transition-all duration-200 ${form.audit_type === type.value ? 'border-brand-violet bg-brand-violet/10 text-brand-violet shadow-glow' : 'border-black/10 dark:border-white/15 text-ink-light/70 dark:text-ink-dark/70 hover:bg-black/[0.02] dark:hover:bg-white/[0.04]'}`}>
                     <p className="font-semibold text-xs">{type.label}</p>
                     <p className="text-[11px] opacity-70 mt-0.5">{type.desc}</p>
                   </button>
@@ -181,51 +131,30 @@ export default function Register() {
 
           <hr className="border-black/10 dark:border-white/10" />
 
-          {/* Conditional Registry Verification Block */}
           {!proof ? (
-            <KraTccVerification
-              brsNumber={form.brs_number || "PENDING"}
-              onComplete={handleRegistryComplete}
-            />
+            <KraTccVerification brsNumber={form.brs_number || "PENDING"} onComplete={handleRegistryComplete} />
           ) : (
             <div className="rounded-2xl border p-4 border-brand-emerald/30 bg-brand-emerald/5 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-emerald/15 text-brand-emerald">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Registry check complete</p>
-                  <p className="text-xs text-ink-light/50 dark:text-ink-dark/50">
-                    Your tax compliance has been securely verified and anchored.
-                  </p>
-                </div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-emerald/15 text-brand-emerald"><CheckCircle2 className="h-5 w-5" /></div>
+                <div className="flex-1"><p className="text-sm font-medium">Registry check complete</p><p className="text-xs text-ink-light/50 dark:text-ink-dark/50">Your tax compliance has been securely verified.</p></div>
               </div>
             </div>
           )}
 
-          {/* Final Submit Button */}
-          <button
-            form="registration-form"
-            type="submit"
-            disabled={submitting || !proof}
-            className="btn-primary w-full disabled:opacity-40"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting Registration...
-              </>
-            ) : (
-              <>
-                Submit for Final Audit
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
+          <button form="registration-form" type="submit" disabled={submitting || !proof} className="btn-primary w-full disabled:opacity-40">
+            {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting Registration...</> : <>Submit for Final Audit <ArrowRight className="h-4 w-4" /></>}
           </button>
 
-          <p className="text-center text-xs text-ink-light/40 dark:text-ink-dark/40">
-            Details are verified against government databases prior to issuing the trust certificate.
-          </p>
+          {!isBusinessTier && (
+            <div className="mt-4 p-4 rounded-xl border border-brand-amber/20 bg-brand-amber/5 flex items-start gap-3">
+              <Lock className="h-5 w-5 text-brand-amber shrink-0 mt-0.5" />
+              <p className="text-xs text-ink-light/70 dark:text-ink-dark/70">
+                <span className="font-semibold text-brand-amber block mb-1">Subscription Required</span>
+                You are currently on a Developer tier. You will be prompted to upgrade to Business Verification to submit this application.
+              </p>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
@@ -235,17 +164,8 @@ export default function Register() {
 function Field({ label, icon: Icon, value, onChange, placeholder, required }) {
   return (
     <div>
-      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
-        <Icon className="h-4 w-4 text-brand-violet" />
-        {label}
-      </label>
-      <input
-        required={required}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="input-field"
-      />
+      <label className="mb-2 flex items-center gap-2 text-sm font-medium"><Icon className="h-4 w-4 text-brand-violet" />{label}</label>
+      <input required={required} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="input-field" />
     </div>
   )
 }

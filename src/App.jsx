@@ -18,11 +18,11 @@ import Pricing from './pages/Public/Pricing.jsx'
 import Login from './pages/Auth/Login.jsx'
 
 // Protected Pages
-import DeveloperDashboard from './pages/Developer/Dashboard.jsx'
+// We rename the import since it's now a unified Dashboard
+import UserDashboard from './pages/Developer/Dashboard.jsx'
 import Docs from './pages/Developer/Docs.jsx'
 import AdminPortal from './pages/Admin/Admin.jsx'
 
-// Smart Route Guard
 function RequireAuth({ children }) {
   const { user } = useAuth()
   const location = useLocation()
@@ -40,30 +40,24 @@ export default function App() {
         <Toaster position="bottom-right" toastOptions={{ className: 'glass-panel' }} />
         
         <Routes>
-          {/* Public Marketing Routes */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Landing />} />
             <Route path="/status" element={<Status />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/docs" element={<Docs />} />
-            
-            {/* FIXED: Pricing is now public! */}
             <Route path="/pricing" element={<Pricing />} />
 
-            {/* Gated Behind Account Login */}
             <Route path="/register" element={<RequireAuth><Register /></RequireAuth>} />
             <Route path="/request-audit" element={<RequireAuth><RequestAudit /></RequireAuth>} />
           </Route>
 
           <Route path="/contact" element={<Contact />} />
           
-          {/* Protected Developer Dashboard Routes */}
           <Route element={<DashboardLayout />}>
-            <Route path="/developer/dashboard" element={<DeveloperDashboard />} />
+            <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
             <Route path="/admin" element={<AdminPortal />} />
             
-            {/* Admin Only Routes */}
             <Route element={<ProtectedAdminRoute />}>
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Route>
