@@ -95,7 +95,7 @@ export default function Navbar() {
                 <div>
                   <div className="flex items-center justify-between pb-6 border-b border-white/10">
                     <div className="flex items-center gap-2">
-                      <img src={logoImg} alt="Argust Logo" className="h-8 w-8 rounded-lg object-cover" />
+                      <img src="/logo1.jpeg" alt="Argust Logo" className="h-8 w-8 rounded-lg object-cover" />
                       <span className="font-display font-semibold text-lg text-white">Argust</span>
                     </div>
                     <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 transition-colors">

@@ -11,7 +11,6 @@ import GlowField from '../../components/common/GlowField.jsx'
 import Seal from '../../components/ui/Seal.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import TrustBadge from '../../components/common/TrustBadge.jsx'
-import { useBusinessStatus, useProvenanceStatus } from '@argust/sdk'
 
 const TABS = [
   { id: 'business', label: 'Business', icon: Building2, placeholder: 'e.g. PVT-12345' },
@@ -29,6 +28,11 @@ export default function Status() {
   const [tab, setTab] = useState('business')
   const [query, setQuery] = useState('')
   const [activeSearch, setActiveSearch] = useState('')
+
+  // 1. Native fetching state to replace the SDK
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [rawError, setRawError] = useState(null)
 
   // Sync URL parameters with local state automatically when the page loads or URL changes
   useEffect(() => {
@@ -48,16 +52,47 @@ export default function Status() {
 
   const activeTab = TABS.find((t) => t.id === tab)
 
-  // Reactive fetching
-  const { data: businessData, loading: businessLoading, error: businessError } = useBusinessStatus(tab === 'business' ? activeSearch : null)
-  const { data: provenanceData, loading: provenanceLoading, error: provenanceError } = useProvenanceStatus(tab === 'provenance' ? activeSearch : null)
+  // 2. The new native fetch effect that talks directly to your Axum backend
+  useEffect(() => {
+    if (!activeSearch) {
+      setResult(null)
+      setRawError(null)
+      return
+    }
 
-  const loading = tab === 'business' ? businessLoading : provenanceLoading
-  const rawError = tab === 'business' ? businessError : provenanceError
-  const result = tab === 'business' ? businessData : provenanceData
+    const fetchData = async () => {
+      setLoading(true)
+      setRawError(null)
+      setResult(null)
+
+      try {
+        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+        
+        // Dynamically route to either /verify/business or /verify/data
+        const endpoint = tab === 'business' 
+          ? `${API_URL}/verify/business/${activeSearch}`
+          : `${API_URL}/verify/data/${activeSearch}`
+
+        const response = await fetch(endpoint)
+
+        if (!response.ok) {
+          if (response.status === 404) throw new Error('No Record Found')
+          throw new Error(`Server Error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setResult(data)
+      } catch (error) {
+        setRawError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [activeSearch, tab])
 
   // Determine if we should show the "Not Found" error state
-  // We show it if the API returned an explicit error, OR if a search completed but returned no data.
   const isNotFound = rawError || (activeSearch && !loading && !result)
   const displayError = rawError 
     ? (String(rawError).includes('404') || String(rawError).toLowerCase().includes('not found') ? 'No Record Found' : `Server Error: ${rawError}`)
