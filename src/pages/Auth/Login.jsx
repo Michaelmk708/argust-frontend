@@ -15,7 +15,8 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/developer/dashboard'
+  // FIXED: Routes exactly to your defined dashboard path in App.jsx
+  const from = location.state?.from?.pathname || '/dashboard'
 
   const handleSubmit = async (e) => {
     e.preventDefault()

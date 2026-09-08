@@ -26,8 +26,9 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="p-4 space-y-1">
-          <SidebarLink to="/developer/dashboard" icon={KeyRound} label="API Keys" onClick={() => setMobileOpen(false)} />
-          <SidebarLink to="/developer/docs" icon={FileText} label="Documentation" onClick={() => setMobileOpen(false)} />
+          {/* FIXED: Removed the invalid /developer prefix to match App.jsx router */}
+          <SidebarLink to="/dashboard" icon={KeyRound} label="Dashboard" onClick={() => setMobileOpen(false)} />
+          <SidebarLink to="/docs" icon={FileText} label="Documentation" onClick={() => setMobileOpen(false)} />
 
           {user.role === 'admin' && (
             <>
@@ -64,7 +65,8 @@ export default function DashboardLayout() {
         {/* Mobile Header Bar */}
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10 glass-nav">
           <div className="flex items-center gap-2.5">
-            <img src={logoImg} alt="Argust" className="h-7 w-7 rounded-lg" />
+            {/* FIXED: Updated to standard public logo path to prevent crashes */}
+            <img src="/logo1.jpeg" alt="Argust" className="h-7 w-7 rounded-lg object-cover" />
             <span className="font-display font-semibold text-base">Argust Portal</span>
           </div>
           <button
