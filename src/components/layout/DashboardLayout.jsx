@@ -3,7 +3,7 @@ import { Outlet, Navigate, NavLink } from 'react-router-dom'
 import { KeyRound, ShieldCheck, LogOut, FileText, Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext.jsx'
-import logoImg from '../../assets/brand/logo1.jpeg'
+
 import Seal from '../ui/Seal.jsx'
 
 export default function DashboardLayout() {
@@ -18,7 +18,7 @@ export default function DashboardLayout() {
     <div className="flex flex-col h-full justify-between">
       <div>
         <div className="p-6 flex items-center gap-3 border-b border-black/10 dark:border-white/10">
-          <img src={logoImg} alt="Argust Logo" className="h-8 w-8 rounded-xl object-cover" />
+          <img src="/logo1.jpeg" alt="Argust Logo" className="h-8 w-8 rounded-xl object-cover" />
           <div className="flex items-center gap-1.5">
             <Seal size={22} state="verified" />
             <span className="font-display font-semibold tracking-tight text-lg">Portal</span>

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from '../../context/ThemeContext.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import logoImg from '../../assets/brand/logo1.jpeg'
+
 
 const publicLinks = [
   { to: '/', label: 'Home' },
@@ -25,7 +25,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-black/10 dark:border-white/10 transition-colors duration-300">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
         <NavLink to="/" className="flex items-center gap-3">
-          <img src={logoImg} alt="Argust Logo" className="h-9 w-9 rounded-xl object-cover border border-black/10 dark:border-white/15" />
+          <img src="/logo1.jpeg" alt="Argust Logo" className="h-9 w-9 rounded-xl object-cover border border-black/10 dark:border-white/15" />
           <div className="flex items-center gap-2">
             <span className="font-display text-lg font-semibold tracking-tight">
               Argust <span className="gradient-text">Trust</span>
