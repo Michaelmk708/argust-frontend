@@ -66,7 +66,8 @@ export default function Status() {
       setResult(null)
 
       try {
-        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+        // Force the app to use the relative proxy path
+const API_URL = '/api'
         
         // Dynamically route to either /verify/business or /verify/data
         const endpoint = tab === 'business' 
