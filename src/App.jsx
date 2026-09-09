@@ -32,7 +32,12 @@ function RequireAuth({ children }) {
   }
   return children
 }
-// ... (imports remain the same) ...
+// Import the Legal Pages
+import PrivacyPolicy from './pages/Public/Legal/PrivacyPolicy.jsx'
+import RiskDisclosure from './pages/Public/Legal/RiskDisclosure.jsx'
+import ContactPolicy from './pages/Public/Legal/ContactPolicy.jsx'
+import CompanyDisclosure from './pages/Public/Legal/CompanyDisclosure.jsx'
+import RefundPolicy from './pages/Public/Legal/RefundPolicy.jsx'
 
 export default function App() {
   return (
@@ -53,6 +58,14 @@ export default function App() {
             {/* FIXED: Moved Contact inside the MainLayout so it gets the Navbar! */}
             <Route path="/contact" element={<Contact />} />
 
+            {/* ---> NEW LEGAL ROUTES HERE <--- */}
+            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+            <Route path="/legal/risk-disclosure" element={<RiskDisclosure />} />
+            <Route path="/legal/company-disclosure" element={<CompanyDisclosure />} />
+            <Route path="/legal/refunds" element={<RefundPolicy />} />
+            <Route path="/legal/complaints" element={<ContactPolicy />} />
+
+            
             <Route path="/register" element={<RequireAuth><Register /></RequireAuth>} />
             <Route path="/request-audit" element={<RequireAuth><RequestAudit /></RequireAuth>} />
           </Route>
