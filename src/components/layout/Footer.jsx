@@ -12,7 +12,6 @@ const Footer = () => {
           {/* Brand & Mission Section */}
           <div className="md:col-span-12 lg:col-span-4">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              {/* Replaced 'A' placeholder with actual logo */}
               <img 
                 src="/logo1.jpeg" 
                 alt="Argust Trust Shield Logo" 
@@ -23,9 +22,20 @@ const Footer = () => {
             <p className="text-sm text-slate-400 leading-relaxed mb-6">
               Automated digital trust infrastructure for modern businesses. Verifiable trust badges & compliance anchored on-chain.
             </p>
-            <p className="text-sm text-slate-300 font-medium">
-              Inquiries: <a href="mailto:support@argusttrust.com" className="text-blue-500 hover:text-blue-400 transition-colors">support@argusttrust.com</a>
-            </p>
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-slate-300 font-medium">
+                Inquiries: <a href="mailto:support@argusttrust.com" className="text-blue-500 hover:text-blue-400 transition-colors">support@argusttrust.com</a>
+              </p>
+              {/* New Social Links */}
+              <div className="flex items-center gap-4 mt-2">
+                <a href="https://x.com/argusttrust" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+                  X (Twitter)
+                </a>
+                <a href="https://www.linkedin.com/company/argust-trust" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+                  LinkedIn
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Legal & Compliance (Strictly mapping to your documents) */}
