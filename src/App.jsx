@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import ProtectedAdminRoute from './components/auth/ProtectedAdminRoute'
+import AdminLogin from './pages/AdminLogin.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+import ProtectedAdminRoute from './components/auth/ProtectedAdminRoute.jsx'
 // Layouts
 import MainLayout from './components/layout/MainLayout.jsx'
 import DashboardLayout from './components/layout/DashboardLayout.jsx'
@@ -18,10 +18,8 @@ import Pricing from './pages/Public/Pricing.jsx'
 import Login from './pages/Auth/Login.jsx'
 
 // Protected Pages
-// We rename the import since it's now a unified Dashboard
 import UserDashboard from './pages/Developer/Dashboard.jsx'
 import Docs from './pages/Developer/Docs.jsx'
-import AdminPortal from './pages/Admin/Admin.jsx'
 
 function RequireAuth({ children }) {
   const { user } = useAuth()
@@ -32,6 +30,7 @@ function RequireAuth({ children }) {
   }
   return children
 }
+
 // Import the Legal Pages
 import PrivacyPolicy from './pages/Public/Legal/PrivacyPolicy.jsx'
 import RiskDisclosure from './pages/Public/Legal/RiskDisclosure.jsx'
@@ -54,17 +53,14 @@ export default function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/pricing" element={<Pricing />} />
-            
-            {/* FIXED: Moved Contact inside the MainLayout so it gets the Navbar! */}
             <Route path="/contact" element={<Contact />} />
 
-            {/* ---> NEW LEGAL ROUTES HERE <--- */}
+            {/* Legal Routes */}
             <Route path="/legal/privacy" element={<PrivacyPolicy />} />
             <Route path="/legal/risk-disclosure" element={<RiskDisclosure />} />
             <Route path="/legal/company-disclosure" element={<CompanyDisclosure />} />
             <Route path="/legal/refunds" element={<RefundPolicy />} />
             <Route path="/legal/complaints" element={<ContactPolicy />} />
-
             
             <Route path="/register" element={<RequireAuth><Register /></RequireAuth>} />
             <Route path="/request-audit" element={<RequireAuth><RequestAudit /></RequireAuth>} />
@@ -73,7 +69,9 @@ export default function App() {
           {/* Protected Dashboard Routes */}
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
-            <Route path="/admin" element={<AdminPortal />} />
+            
+            {/* Map old /admin route safely to the new dashboard */}
+            <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
             
             <Route element={<ProtectedAdminRoute />}>
               <Route path="/admin-dashboard" element={<AdminDashboard />} />

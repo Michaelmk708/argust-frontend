@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Loader2, Building2, Mail, Phone, ShieldCheck, FileCode, Check, Send } from 'lucide-react'
+import axios from 'axios'
 import GlowField from '../../components/common/GlowField.jsx'
 
 const SERVICES = [
@@ -24,11 +25,26 @@ export default function RequestAudit() {
     e.preventDefault()
     setLoading(true)
 
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+      
+      // Send the payload to your Axum endpoint
+      await axios.post(`${API_URL}/admin/notify`, { 
+        ...form, 
+        services: selectedServices,
+        type: 'AUDIT_REQUEST'
+      })
+
       toast.success('Audit request received! Our engineering team will contact you via email shortly.')
+      
+      // Reset form
       setForm({ company_name: '', contact_person: '', email: '', phone: '', notes: '' })
-    }, 1200)
+      setSelectedServices(['INFRA'])
+    } catch (error) {
+      toast.error('Transmission failed. Check network connection.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

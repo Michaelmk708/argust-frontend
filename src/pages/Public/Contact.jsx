@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, MessageSquare, Send, CheckCircle2, LifeBuoy, Clock, Code2, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 import GlowField from '../../components/common/GlowField.jsx'
 
 export default function Contact() {
@@ -23,12 +24,26 @@ export default function Contact() {
     e.preventDefault()
     setLoading(true)
     
-    // Simulate network request to your Axum backend or ticketing system
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    
-    setLoading(false)
-    setSubmitted(true)
-    toast.success('Support request received.')
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+      await axios.post(`${API_URL}/admin/notify`, formData)
+      
+      setSubmitted(true)
+      toast.success('Support request received.')
+      
+      // Reset form data for future requests
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        category: 'INTEGRATION',
+        message: '',
+      })
+    } catch (error) {
+      toast.error('Transmission failed. Check network connection.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -95,8 +110,6 @@ export default function Contact() {
                 </div>
               </div>
             </div>
-
-            
           </motion.div>
 
           <motion.div
